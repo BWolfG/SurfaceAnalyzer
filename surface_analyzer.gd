@@ -16,13 +16,14 @@ func get_surface_meta(collider: Node3D, face_index: int, meta_name: StringName, 
 
 func get_surface_material(collider: Node3D, face_index: int) -> Material:
 	if collider and collider.get_parent() and collider.get_parent() is MeshInstance3D:
-		var current_colliding_surface: MeshInstance3D = collider.get_parent()
-		if current_colliding_surface.get_surface_override_material_count() == 1:
-			return current_colliding_surface.get_surface_override_material(0)
-		if current_colliding_surface.mesh.get_surface_count() == 1:
-			return current_colliding_surface.get_active_material(0)
-		if current_colliding_surface.mesh.get_surface_count() > 1:
-			return _get_material_by_face(face_index, current_colliding_surface)
+		var mesh_instance: MeshInstance3D = collider.get_parent()
+
+		if mesh_instance.mesh.get_surface_count() == 1:
+			if mesh_instance.get_surface_override_material(0):
+				return mesh_instance.get_surface_override_material(0)
+			return mesh_instance.get_active_material(0)
+		if mesh_instance.mesh.get_surface_count() > 1:
+			return _get_material_by_face(face_index, mesh_instance)
 
 	return null
 
