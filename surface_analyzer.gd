@@ -1,5 +1,7 @@
 extends Node
 
+#TODO: Add a bit of documentation
+
 var _mdt_array: Array[MeshDataTool] = []
 var _last_mesh: Mesh = null
 var _last_mesh_version: int = 0
