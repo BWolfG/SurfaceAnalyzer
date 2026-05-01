@@ -1,5 +1,3 @@
-SurfaceAnalyzer
-
 A Godot 4.2+ plugin for identifying surface materials on complex 3D meshes via raycast.
 
 SurfaceAnalyzer maps a raycast face index to the material of the hit triangle using **MeshDataTool**. It works alongside a detailed `ConcavePolygonShape3D` for precise material detection
