@@ -89,7 +89,7 @@ func _get_material_by_face(face_index: int, mesh_instance: MeshInstance3D, overr
 	var material_index: int = 0
 
 	for mdt: MeshDataTool in _mdt_array:
-		if face_index >= mdt.get_face_count():
+		if face_index > mdt.get_face_count():
 			face_index -= mdt.get_face_count()
 			material_index += 1
 		else:
