@@ -92,7 +92,8 @@ func _get_material_by_face(face_index: int, mesh_instance: MeshInstance3D, overr
 		if face_index >= mdt.get_face_count():
 			face_index -= mdt.get_face_count()
 			material_index += 1
-			continue
+		else:
+			break
 
 	if override_material:
 		return mesh_instance.get_surface_override_material(material_index)
