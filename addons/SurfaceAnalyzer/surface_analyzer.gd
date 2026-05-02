@@ -8,7 +8,7 @@
 ## - The detailed collision shape must be generated from the visual mesh to ensure
 ##   face indices match between the collision and the rendered geometry.
 ## - If using [b]Jolt Physics[/b], the project setting
-##   [code]physics/jolt/ray_cast/enable_face_index[/code] must be set to [code]true[/code]
+##   [code]physics/jolt_physics_3d/queries/enable_ray_cast_face_index[/code] must be set to [code]true[/code]
 ##   (requires godot-jolt 0.14.0 or newer). Without this, [method RayCast3D.get_collision_face_index]
 ##   always returns [code]-1[/code].
 ##
