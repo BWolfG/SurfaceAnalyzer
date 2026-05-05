@@ -15,7 +15,7 @@
 ##   Custom node hierarchies may require manual adjustments.
 ## [br][br]
 ## - [b]Caching behavior:[/b] Triangle counts are cached per [Mesh] resource.
-##   If you dynamically replace meshes at runtime, the cache will retain the old data.
+##   If you check another mesh during execution, the cache will remove the old data..
 ## [br][br]
 ## - [b]Memory:[/b] The cache stores only the last accessed mesh to minimize memory usage.
 ##   Switching between many different meshes will repeatedly rebuild the cache.
