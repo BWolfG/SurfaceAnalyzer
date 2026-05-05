@@ -1,8 +1,8 @@
 ## A tool for identifying materials on complex mesh surfaces using raycast data.
 ##
-## SurfaceAnalyzer retrieves the material of the surface hit by a [RayCast3D].
-## It is designed to work alongside a detailed [ConcavePolygonShape3D] for precise
-## material detection without affecting player physics.
+## SurfaceAnalyzer uses [MeshDataTool] to map raycast face indices to their
+## corresponding materials on a [MeshInstance3D]. It works alongside with
+## a detailed [ConcavePolygonShape3D] for precise material detection via [RayCast3D].
 ##
 ## [b]Requirements:[/b]
 ## - The detailed collision shape must be generated from the visual mesh to ensure
@@ -20,7 +20,9 @@
 ## [/codeblock]
 extends Node
 
-var _surface_triangle_counts: Dictionary[Mesh, Array]
+var _mdt_array: Array[MeshDataTool] = []
+var _last_mesh: Mesh = null
+var _last_mesh_version: int = 0
 
 ## Returns the overridden material for the surface hit by the raycast.
 ## This returns the material set in MeshInstance3D's Surface Material Override,
@@ -32,7 +34,6 @@ var _surface_triangle_counts: Dictionary[Mesh, Array]
 func get_surface_override_material(collider: CollisionObject3D, face_index: int) -> Material:
 	if collider and collider.get_parent() and collider.get_parent() is MeshInstance3D:
 		var mesh_instance: MeshInstance3D = collider.get_parent()
-
 		if mesh_instance.get_surface_override_material_count() == 1:
 			return mesh_instance.get_surface_override_material(0)
 
@@ -58,46 +59,43 @@ func get_active_material(collider: CollisionObject3D, face_index: int) -> Materi
 
 	return null
 
-
-func _get_triangle_counts(mesh: Mesh) -> Array:
-	if _surface_triangle_counts.has(mesh):
-		return _surface_triangle_counts[mesh]
-
-	_surface_triangle_counts.clear()
-
-	var counts: Array = []
-	for surface_idx: int in range(mesh.get_surface_count()):
-		var arrays: Array = mesh.surface_get_arrays(surface_idx)
-		var index_array = arrays[Mesh.ARRAY_INDEX]
-		var triangle_count: int = 0
-
-		if index_array and index_array.size() > 0:
-			triangle_count = index_array.size() / 3
-		else:
-			var vertex_array: Array = arrays[Mesh.ARRAY_VERTEX]
-			if vertex_array:
-				triangle_count = vertex_array.size() / 3
-
-		counts.append(triangle_count)
-
-	_surface_triangle_counts[mesh] = counts
-
-	return counts
-
-func _get_material_by_face(face_index: int, mesh_instance: MeshInstance3D, override_material: bool = false) -> Material:
+func _build_mesh_data_tools(mesh_instance: MeshInstance3D) -> void:
 	var mesh: Mesh = mesh_instance.mesh
 
 	if not mesh:
-		return null
+		return
 
-	var triangle_counts: Array = _get_triangle_counts(mesh)
+	var current_version = mesh.get_rid().get_id() 
 
-	for surface_idx: int in range(triangle_counts.size()):
-		if face_index < triangle_counts[surface_idx]:
-			if override_material:
-				return mesh_instance.get_surface_override_material(surface_idx)
-			else:
-				return mesh_instance.get_active_material(surface_idx)
-		face_index -= triangle_counts[surface_idx]
+	if mesh == _last_mesh and current_version == _last_mesh_version:
+		return 
 
-	return null
+	_last_mesh = mesh
+	_last_mesh_version = current_version
+
+	var surface_count = mesh.get_surface_count()
+	_mdt_array.resize(surface_count)
+
+	for surface in surface_count:
+		var mdt = _mdt_array[surface]
+		if not mdt:
+			mdt = MeshDataTool.new()
+			_mdt_array[surface] = mdt
+		mdt.create_from_surface(mesh, surface)
+
+func _get_material_by_face(face_index: int, mesh_instance: MeshInstance3D, override_material: bool = false) -> Material:
+	_build_mesh_data_tools(mesh_instance)
+
+	var material_index: int = 0
+
+	for mdt: MeshDataTool in _mdt_array:
+		if face_index > mdt.get_face_count():
+			face_index -= mdt.get_face_count()
+			material_index += 1
+		else:
+			break
+
+	if override_material:
+		return mesh_instance.get_surface_override_material(material_index)
+
+	return mesh_instance.get_active_material(material_index)
