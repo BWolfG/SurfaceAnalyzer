@@ -18,6 +18,14 @@ Requirements
 - The detailed collision shape **must** be generated from the visual mesh
 - **Jolt Physics:** If using Jolt, enable `physics/jolt_physics_3d/queries/enable_ray_cast_face_index` (requires **godot-jolt 0.14.0** or newer)
 
+**Custom node hierarchies may require manual adjustments.**
+
+- Caching behavior: Triangle counts are cached per Mesh resource. If you check another mesh during execution, the cache will remove the old data.
+
+- Memory: The cache stores only the last accessed mesh to minimize memory usage. Switching between many different meshes will repeatedly rebuild the cache.
+
+- Performance: First access to a new mesh triggers [method Mesh.surface_get_arrays], which copies geometry data from GPU to CPU. This may cause a spike. Subsequent raycasts on the same mesh are fast.
+
 Installation
 
 1. Copy the addon folder into your project's `addons/` directory
