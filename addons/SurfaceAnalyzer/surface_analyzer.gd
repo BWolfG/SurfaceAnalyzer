@@ -3,7 +3,7 @@
 ## SurfaceAnalyzer retrieves the material of the surface hit by a [RayCast3D].
 ## It is designed to work alongside a detailed [ConcavePolygonShape3D] for precise
 ## material detection without affecting player physics.
-##
+## [br][br]
 ## [b]Requirements:[/b]
 ## - The detailed collision shape must be generated from the visual mesh to ensure
 ##   face indices match between the collision and the rendered geometry.
@@ -11,7 +11,20 @@
 ##   [code]physics/jolt_physics_3d/queries/enable_ray_cast_face_index[/code] must be set to [code]true[/code]
 ##   (requires godot-jolt 0.14.0 or newer). Without this, [method RayCast3D.get_collision_face_index]
 ##   always returns [code]-1[/code].
-##
+## [br][br]
+##   Custom node hierarchies may require manual adjustments.
+## [br][br]
+## - [b]Caching behavior:[/b] Triangle counts are cached per [Mesh] resource.
+##   If you dynamically replace meshes at runtime, the cache will retain the old data.
+##   Call [method invalidate_cache] manually after changing a mesh.
+## [br][br]
+## - [b]Memory:[/b] The cache stores only the last accessed mesh to minimize memory usage.
+##   Switching between many different meshes will repeatedly rebuild the cache.
+## [br][br]
+## - [b]Performance:[/b] First access to a new mesh triggers [method Mesh.surface_get_arrays],
+##   which copies geometry data from GPU to CPU. This may cause a spike. 
+##   Subsequent raycasts on the same mesh are fast.
+## [br][br]
 ## [b]Usage:[/b]
 ## [codeblock]
 ## var material = SurfaceAnalyzer.get_active_material(collider, face_index)
@@ -57,7 +70,6 @@ func get_active_material(collider: CollisionObject3D, face_index: int) -> Materi
 		return _get_material_by_face(face_index, mesh_instance)
 
 	return null
-
 
 func _get_triangle_counts(mesh: Mesh) -> Array:
 	if _surface_triangle_counts.has(mesh):
