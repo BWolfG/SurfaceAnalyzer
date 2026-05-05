@@ -16,7 +16,6 @@
 ## [br][br]
 ## - [b]Caching behavior:[/b] Triangle counts are cached per [Mesh] resource.
 ##   If you dynamically replace meshes at runtime, the cache will retain the old data.
-##   Call [method invalidate_cache] manually after changing a mesh.
 ## [br][br]
 ## - [b]Memory:[/b] The cache stores only the last accessed mesh to minimize memory usage.
 ##   Switching between many different meshes will repeatedly rebuild the cache.
