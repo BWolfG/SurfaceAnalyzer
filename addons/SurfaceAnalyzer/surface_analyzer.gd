@@ -17,7 +17,7 @@
 ## - [b]Caching behavior:[/b] Triangle counts are cached per [Mesh] resource.
 ##   If you check another mesh during execution, the cache will remove the old data.
 ## [br][br]
-## - [b]Memory:[/b] The cache stores only the last accessed mesh to minimize memory usage.
+## - [b]Memory:[/b] The cache stores up to 16 last accessed mesh to minimize memory usage.
 ##   Switching between many different meshes will repeatedly rebuild the cache.
 ## [br][br]
 ## - [b]Performance:[/b] First access to a new mesh triggers [method Mesh.surface_get_arrays],
@@ -32,7 +32,16 @@
 ## [/codeblock]
 extends Node
 
-var _surface_triangle_counts: Dictionary[Mesh, Array]
+enum {
+	AUTO, ## Automatically removes old entries when limit is exceeded.
+	MANUAL, ## Requires manual clear_cache() call.
+	NONE, ## Turns off the caching.
+}
+
+## Cache clearing behavior
+var cache_cleaning_behavior: int = AUTO
+var _auto_cache_size: int = 16
+var _cached_data: Dictionary[Mesh, Array]
 
 ## Returns the overridden material for the surface hit by the raycast.
 ## This returns the material set in MeshInstance3D's Surface Material Override,
@@ -70,28 +79,78 @@ func get_active_material(collider: CollisionObject3D, face_index: int) -> Materi
 
 	return null
 
+## Removes all cached mesh data.
+func clear_cache() -> void:
+	_cached_data.clear()
+
+## Changes the maximum automatic cache size.
+## [br][br]
+## Only works when [member cache_cleaning_behavior] is AUTO.
+## Size is automatically clamped between 1 and 16.
+## When decreasing the size, oldest entries are removed.
+func change_auto_cache_size(size: int) -> void:
+	_auto_cache_size = size
+	_auto_cache_size = clamp(_auto_cache_size, 1, 16)
+
+	if cache_cleaning_behavior == AUTO and _cached_data.size() > _auto_cache_size:
+		for position: int in _cached_data.size() - _auto_cache_size:
+			_cached_data.erase(_cached_data.keys()[0])
+
+## Caches a mesh surface.
+## [br][br]
+## Accepts different input types:
+## [br][br]
+## - [MeshInstance3D]: automatically extracts the mesh
+## [br][br]
+## - [Mesh]: directly caches the mesh data
+## [br][br]
+## [b]Usage:[/b]
+## [codeblock]
+## # With MeshInstance3D
+## SurfaceAnalyzer.cache_mesh_surface($Player/MeshInstance3D)
+##
+## # With direct Mesh
+## var box_mesh = BoxMesh.new()
+## SurfaceAnalyzer.cache_mesh_surface(box_mesh)
+func cache_mesh_surface(mesh: Variant) -> void:
+	if mesh is MeshInstance3D and mesh.is_inside_tree():
+		_calculate_triangle_data(mesh.mesh)
+	elif mesh is Mesh:
+		_calculate_triangle_data(mesh)
+
 func _get_triangle_counts(mesh: Mesh) -> Array:
-	if _surface_triangle_counts.has(mesh):
-		return _surface_triangle_counts[mesh]
+	if _cached_data.has(mesh):
+		var counts: Array = _cached_data.get(mesh)
+		_cached_data.erase(mesh)
+		_cached_data[mesh] = counts
+		return _cached_data[mesh]
 
-	_surface_triangle_counts.clear()
+	return _calculate_triangle_data(mesh)
 
+func _auto_cache_clear() -> void:
+	if _cached_data.size() > _auto_cache_size:
+		_cached_data.erase(_cached_data.keys()[0])
+
+func _calculate_triangle_data(mesh: Variant) -> Array:
 	var counts: Array = []
 	for surface_idx: int in range(mesh.get_surface_count()):
 		var arrays: Array = mesh.surface_get_arrays(surface_idx)
-		var index_array = arrays[Mesh.ARRAY_INDEX]
 		var triangle_count: int = 0
-
-		if index_array and index_array.size() > 0:
+ 
+		if arrays[Mesh.ARRAY_INDEX] != null:
+			var index_array: Array = arrays[Mesh.ARRAY_INDEX]
 			triangle_count = index_array.size() / 3
-		else:
+		elif arrays[Mesh.ARRAY_VERTEX] != null:
 			var vertex_array: Array = arrays[Mesh.ARRAY_VERTEX]
 			if vertex_array:
 				triangle_count = vertex_array.size() / 3
-
 		counts.append(triangle_count)
 
-	_surface_triangle_counts[mesh] = counts
+	if cache_cleaning_behavior != NONE:
+		_cached_data[mesh] = counts
+
+	if cache_cleaning_behavior == AUTO:
+		_auto_cache_clear()
 
 	return counts
 
