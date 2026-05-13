@@ -2,7 +2,7 @@ SurfaceAnalyzer
 
 A Godot 4.2+ plugin for identifying surface materials on complex 3D meshes via raycast.
 
-Designed to work alongside a detailed `ConcavePolygonShape3D` for precise material detection without affecting player physics.
+Designed to work alongside a detailed `ConcavePolygonShape3D` for precise material detection.
 
 Features
 
