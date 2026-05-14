@@ -1,8 +1,7 @@
 ## A tool for identifying materials on complex mesh surfaces using raycast data.
 ##
 ## SurfaceAnalyzer retrieves the material of the surface hit by a [RayCast3D].
-## It is designed to work alongside a detailed [ConcavePolygonShape3D] for precise
-## material detection without affecting player physics.
+## It is designed to work alongside a detailed [ConcavePolygonShape3D] for precise material detection.
 ## [br][br]
 ## [b]Requirements:[/b]
 ## - The detailed collision shape must be generated from the visual mesh to ensure
