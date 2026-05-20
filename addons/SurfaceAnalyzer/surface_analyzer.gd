@@ -131,6 +131,9 @@ func _auto_cache_clear() -> void:
 		_cached_data.erase(_cached_data.keys()[0])
 
 func _calculate_triangle_data(mesh: Variant) -> Array:
+	if not mesh:
+		return []
+
 	var counts: Array = []
 	for surface_idx: int in range(mesh.get_surface_count()):
 		var arrays: Array = mesh.surface_get_arrays(surface_idx)
@@ -162,6 +165,7 @@ func _get_material_by_face(face_index: int, mesh_instance: MeshInstance3D, overr
 	var triangle_counts: Array = _get_triangle_counts(mesh)
 
 	for surface_idx: int in range(triangle_counts.size()):
+
 		if face_index < triangle_counts[surface_idx]:
 			if override_material:
 				return mesh_instance.get_surface_override_material(surface_idx)
