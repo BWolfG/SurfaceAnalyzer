@@ -45,8 +45,6 @@ var _cached_data: Dictionary[Mesh, Array]
 ## Returns the overridden material for the surface hit by the raycast.
 ## This returns the material set in MeshInstance3D's Surface Material Override,
 ## not the material stored in the Mesh resource.
-## Use [method get_active_material] to get the material that is actually rendered,
-## or [method get_base_material] to get the material from the Mesh resource.
 ## [param collider] The CollisionObject3D hit by the raycast.
 ## [param face_index] The face index from [method RayCast3D.get_collision_face_index].
 func get_surface_override_material(collider: CollisionObject3D, face_index: int) -> Material:
@@ -64,10 +62,9 @@ func get_surface_override_material(collider: CollisionObject3D, face_index: int)
 ## This returns the material from [method MeshInstance3D.get_active_material],
 ## which accounts for Surface Material Override, material from the Mesh resource,
 ## or the default material in that order of priority.
-## This is the method you typically want for reading surface properties like friction or footstep sounds.
 ## [param collider] The CollisionObject3D hit by the raycast.
 ## [param face_index] The face index from [method RayCast3D.get_collision_face_index].
-func get_active_material(collider: CollisionObject3D, face_index: int) -> Material:
+func get_surface_active_material(collider: CollisionObject3D, face_index: int) -> Material:
 	if collider and collider.get_parent() and collider.get_parent() is MeshInstance3D:
 		var mesh_instance: MeshInstance3D = collider.get_parent()
 
