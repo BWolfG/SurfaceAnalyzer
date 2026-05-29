@@ -1,39 +1,36 @@
-SurfaceAnalyzer
+# SurfaceAnalyzer
 
 A Godot 4.2+ plugin for identifying surface materials on complex 3D meshes via raycast.
 
-Designed to work alongside a detailed `ConcavePolygonShape3D` for precise material detection.
+Designed to work alongside a detailed `ConcavePolygonShape3D`.
 
-Features
+## Features
 
-- Returns the **actually rendered** material (`get_active_material`)
+- Returns the **actually rendered** material (`get_surface_active_material`)
 - Returns the **overridden** material from MeshInstance3D (`get_surface_override_material`)
 - Works with multi-surface meshes
-- No performance drops when switching between different meshes
-- Automatic memory management
+- Three cache modes: `AUTO`, `MANUAL`, `NONE`
+- Manual cache management: add, remove, query by index or mesh
+- No duplicate cache entries for shared mesh resources
+- Automatic memory management in `AUTO` mode
 
-Requirements
+## Requirements
 
 - **Godot 4.2** or newer
 - The detailed collision shape **must** be generated from the visual mesh
 - **Jolt Physics:** If using Jolt, enable `physics/jolt_physics_3d/queries/enable_ray_cast_face_index` (requires **godot-jolt 0.14.0** or newer)
+- If you use **Unwrap UV2 for Lightmap/AO**, regenerate the collision shape afterward. Godot rebuilds the mesh during unwrapping, causing triangle indices to mismatch.
 
-**Custom node hierarchies may require manual adjustments.**
+- Custom node hierarchies may require manual adjustments.
 
-- Caching behavior: Triangle counts are cached per Mesh resource. If you check another mesh during execution, the cache will remove the old data.
+## Installation
 
-- Memory: The cache stores only the last accessed mesh to minimize memory usage. Switching between many different meshes will repeatedly rebuild the cache.
-
-- Performance: First access to a new mesh triggers [method Mesh.surface_get_arrays], which copies geometry data from GPU to CPU. This may cause a spike. Subsequent raycasts on the same mesh are fast.
-
-Installation
-
-1. Copy the addon folder into your project's `addons/` directory
+1. Copy the `addons/SurfaceAnalyzer` folder into your project's `addons/` directory
 2. Enable the plugin in **Project Settings → Plugins** — the Autoload is registered automatically
 
-Usage
+## Usage
 
 ```gdscript
-var material = SurfaceAnalyzer.get_active_material(collider, face_index)
+var material := SurfaceAnalyzer.get_surface_active_material(collider, face_index)
 if material:
     print(material.resource_path)
