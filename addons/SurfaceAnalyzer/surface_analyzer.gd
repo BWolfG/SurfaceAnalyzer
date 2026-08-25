@@ -13,7 +13,6 @@
 ##   always returns [code]-1[/code].
 ## [br][br]
 ##   If you use [b]Unwrap UV2 for Lightmap/AO[/b], regenerate the collision shape afterward.
-##   Godot rebuilds the mesh during unwrapping, causing triangle indices to mismatch.
 ## [br][br]
 ##   Custom node hierarchies may require manual adjustments.
 ## [br][br]
@@ -57,7 +56,7 @@ var _auto_cache_size: int = 16
 var _cached_data: Dictionary[Mesh, PackedInt32Array]
 #endregion
 
-#region Public API — Material Detection
+#region Public API - Material Detection
 ## Returns the overridden material for the surface hit by the raycast.
 ## This returns the material set in [member MeshInstance3D.surface_override_material],
 ## not the material stored in the [Mesh] resource.
@@ -92,7 +91,7 @@ func get_surface_active_material(collider: CollisionObject3D, face_index: int) -
 	return null
 #endregion
 
-#region Public API — Cache Management
+#region Public API - Cache Management
 ## Removes all cached mesh data.
 func clear_cache() -> void:
 	_cached_data.clear()
@@ -138,9 +137,9 @@ func erase_mesh_from_cache_by_index(idx: int) -> void:
 ## If a [MeshInstance3D] is provided and is inside the tree, its [member MeshInstance3D.mesh] will be used.
 func get_cached_mesh_index(mesh: Variant) -> int:
 	if mesh is MeshInstance3D and mesh.is_inside_tree():
-		return _cached_data.keys().find(mesh.mesh)
+		return _cached_data.find_key(mesh.mesh)
 	elif mesh is Mesh:
-		return _cached_data.keys().find(mesh)
+		return _cached_data.find_key(mesh)
 	return -1
 
 ## Returns the number of meshes currently stored in the cache.
@@ -152,31 +151,33 @@ func get_cached_mesh_count() -> int:
 ## If a [MeshInstance3D] is provided and is inside the tree, its [member MeshInstance3D.mesh] will be used.
 func is_mesh_cached(mesh: Variant) -> bool:
 	if mesh is MeshInstance3D and mesh.is_inside_tree():
-		return _cached_data.has(mesh.mesh)
+		return mesh.mesh in _cached_data
 	elif mesh is Mesh:
-		return _cached_data.has(mesh)
+		return mesh in _cached_data
 	return false
 #endregion
 
 #region Private Implementation
 func _get_triangle_counts(mesh: Mesh) -> PackedInt32Array:
-	if _cached_data.has(mesh):
-		var counts: PackedInt32Array = _cached_data.get(mesh)
+	if mesh in _cached_data:
+		var counts: PackedInt32Array = _cached_data[mesh]
 		_cached_data.erase(mesh)
 		_cached_data[mesh] = counts
-		return _cached_data[mesh]
+		return counts
 
 	return _calculate_triangle_data(mesh)
 
 func _auto_cache_clear() -> void:
 	if _cached_data.size() > _auto_cache_size:
-		_cached_data.erase(_cached_data.keys()[0])
+		for mesh: Mesh in _cached_data:
+			_cached_data.erase(mesh)
+			break
 
 func _calculate_triangle_data(mesh: Variant) -> PackedInt32Array:
 	if not mesh:
 		return PackedInt32Array()
 
-	var counts: PackedInt32Array = []
+	var counts: PackedInt32Array = PackedInt32Array()
 	for surface_idx: int in range(mesh.get_surface_count()):
 		var arrays: Array = mesh.surface_get_arrays(surface_idx)
 		var triangle_count: int = 0
